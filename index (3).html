@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Día de Muertos Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Lora:ital,wght@1,500&display=swap">
+<style>
+/* Layout: one-column phone game; papel picado band, header, 5x5 card, sheet-style dialog */
+:root{
+  --bg:#1e1026; --panel:#2b1736; --line:#4a2f58; --cream:#fef3e2; --muted:#c9b6cf;
+  --mari:#f7941d; --yel:#fac83c; --pink:#e63978; --teal:#26a69a; --purp:#7c3aa0; --done:#3a2347;
+  --display:"Poppins",system-ui,sans-serif; --accent:"Lora",Georgia,serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--cream)}
+body{font-family:var(--display);font-weight:500;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px}
+.picado{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 0;padding:6px 6px 0}
+.picado span{height:44px;clip-path:polygon(0 0,100% 0,100% 100%,83% 88%,67% 100%,50% 88%,33% 100%,17% 88%,0 100%);
+  -webkit-mask:radial-gradient(circle at 50% 42%,transparent 7px,#000 8px);mask:radial-gradient(circle at 50% 42%,transparent 7px,#000 8px)}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding-top:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.langs{display:flex;gap:6px}
+.langs button{font:700 13px var(--display);letter-spacing:.06em;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--mari);color:#2a140a;border-color:var(--mari)}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mari)}
+h1{font:700 clamp(28px,8vw,40px)/1.05 var(--display);margin:4px 0 0;text-wrap:balance}
+h1 em{font:italic 500 .8em var(--accent);color:var(--mari);display:block;margin-top:4px}
+.rules{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
+.rules b{color:var(--cream)}
+.progress{display:flex;align-items:center;gap:10px;font-size:14px}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--panel);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mari),var(--yel));transition:width .3s}
+.count{font-variant-numeric:tabular-nums;color:var(--yel);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.sq{position:relative;aspect-ratio:1/1.2;max-width:100%;border:1px solid var(--line);background:var(--panel);color:var(--cream);border-radius:10px;padding:6px 5px;
+  font:500 clamp(9px,2.6vw,13px)/1.2 var(--display);text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;cursor:pointer;overflow:hidden;hyphens:auto;overflow-wrap:anywhere}
+.sq:focus-visible,.langs button:focus-visible,.btn:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.sq .tag{position:absolute;top:4px;left:4px;width:7px;height:7px;border-radius:50%}
+.sq.k-connect .tag{background:var(--teal)} .sq.k-mexico .tag{background:var(--pink)} .sq.k-learn .tag{background:var(--yel)}
+.sq.done{background:var(--done);border-color:var(--mari)}
+.sq.done .who{font:italic 500 clamp(9px,2.6vw,13px) var(--accent);color:var(--mari)}
+.sq.free{background:var(--mari);color:#2a140a;border-color:var(--mari);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font:500 13px var(--display);cursor:pointer;padding:4px}
+[hidden]{display:none!important}
+/* dialog */
+.scrim{position:fixed;inset:0;background:rgba(10,4,14,.7);display:flex;align-items:flex-end;justify-content:center;z-index:20;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.sheet h2{font:700 20px/1.3 var(--display);margin:0;text-wrap:balance}
+.sheet label{font-size:13px;color:var(--muted)}
+.sheet input{width:100%;font:500 17px var(--display);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--cream)}
+.answer{border-left:3px solid var(--yel);padding:8px 12px;background:var(--bg);border-radius:0 8px 8px 0;font:italic 500 16px/1.4 var(--accent)}
+.warn{color:var(--yel);font-size:13px;margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:120px;font:700 15px var(--display);padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--cream);cursor:pointer}
+.btn.primary{background:var(--mari);border-color:var(--mari);color:#2a140a}
+.win{text-align:center;align-items:center}
+.win .big{font:700 52px/1 var(--display);color:var(--yel);letter-spacing:.04em}
+.win p{margin:0;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="picado" aria-hidden="true">
+  <span style="background:#e63978"></span><span style="background:#f7941d"></span><span style="background:#26a69a"></span><span style="background:#7c3aa0"></span>
+  <span style="background:#fac83c"></span><span style="background:#e63978"></span><span style="background:#26a69a"></span><span style="background:#f7941d"></span>
+</div>
+
+<main class="wrap">
+  <div class="top">
+    <div class="eyebrow" id="t-eyebrow"></div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-l="en">EN</button><button type="button" data-l="de">DE</button><button type="button" data-l="es">ES</button>
+    </div>
+  </div>
+  <h1><span id="t-title"></span><em id="t-sub"></em></h1>
+  <p class="rules" id="t-rules"></p>
+  <div class="progress"><div class="bar"><i id="bar"></i></div><span class="count" id="count">0/24</span></div>
+  <div class="grid" id="grid"></div>
+  <div class="legend" id="legend"></div>
+  <div class="foot"><span>@stuttgart.languageexchange</span><button type="button" class="linkbtn" id="resetBtn"></button></div>
+</main>
+
+<div class="scrim" id="dlg" hidden>
+  <form class="sheet" id="form" autocomplete="off">
+    <h2 id="dq"></h2>
+    <div class="answer" id="dans" hidden></div>
+    <button type="button" class="btn" id="reveal" hidden></button>
+    <div>
+      <label for="nameInput" id="t-who"></label>
+      <input id="nameInput" maxlength="30">
+    </div>
+    <p class="warn" id="dwarn" hidden></p>
+    <div class="row">
+      <button type="button" class="btn" id="clearBtn"></button>
+      <button type="submit" class="btn primary" id="saveBtn"></button>
+    </div>
+  </form>
+</div>
+
+<div class="scrim" id="confirm" hidden>
+  <div class="sheet">
+    <h2 id="t-confirm"></h2>
+    <div class="row"><button type="button" class="btn" id="noReset"></button><button type="button" class="btn primary" id="yesReset"></button></div>
+  </div>
+</div>
+
+<div class="scrim" id="winDlg" hidden>
+  <div class="sheet win">
+    <div class="big">¡BINGO!</div>
+    <p id="t-win"></p>
+    <button type="button" class="btn primary" id="closeWin"></button>
+  </div>
+</div>
+
+<script>
+const UI={
+ en:{eyebrow:"Language Exchange Party",title:"Language Bingo",sub:"Día de los Muertos Edition",
+  rules:"Tap a square, ask someone the question and write their name. <b>Full card? Show the host!</b>",
+  who:"Name of the person",save:"Save",clear:"Clear",reveal:"Show the answer",reset:"Start a new card",
+  confirm:"Start a new card? Your names will be deleted.",yes:"Yes, start new",no:"Cancel",
+  warn:"You already have 2 squares with this name. Find someone new!",win:"You filled the whole card. Show this screen to the host to claim your prize!",close:"Close",
+  legend:["Get to know each other","Mexico","Guess & learn"],free:"FREE<br>Introduce yourself to someone new"},
+ de:{eyebrow:"Language Exchange Party",title:"Sprach-Bingo",sub:"Día de los Muertos Edition",
+  rules:"Tipp auf ein Feld, stell jemandem die Frage und schreib den Namen auf. <b>Karte voll? Zeig sie dem Gastgeber!</b>",
+  who:"Name der Person",save:"Speichern",clear:"Löschen",reveal:"Antwort zeigen",reset:"Neue Karte starten",
+  confirm:"Neue Karte starten? Deine Namen werden gelöscht.",yes:"Ja, neu starten",no:"Abbrechen",
+  warn:"Du hast schon 2 Felder mit diesem Namen. Such dir jemand Neues!",win:"Du hast die ganze Karte voll. Zeig diesen Bildschirm dem Gastgeber und hol dir deinen Preis!",close:"Schließen",
+  legend:["Kennenlernen","Mexiko","Etwas lernen"],free:"FREI<br>Stell dich jemand Neuem vor"},
+ es:{eyebrow:"Language Exchange Party",title:"Bingo de idiomas",sub:"Edición Día de los Muertos",
+  rules:"Toca una casilla, hazle la pregunta a alguien y escribe su nombre. <b>¿Cartón lleno? ¡Enséñaselo al organizador!</b>",
+  who:"Nombre de la persona",save:"Guardar",clear:"Borrar",reveal:"Ver la respuesta",reset:"Empezar un cartón nuevo",
+  confirm:"¿Empezar un cartón nuevo? Se borrarán tus nombres.",yes:"Sí, empezar",no:"Cancelar",
+  warn:"Ya tienes 2 casillas con este nombre. ¡Busca a alguien nuevo!",win:"¡Completaste todo el cartón! Enséñale esta pantalla al organizador para recibir tu premio.",close:"Cerrar",
+  legend:["Conocerse","México","Aprender algo"],free:"LIBRE<br>Preséntate a alguien nuevo"}
+};
+// k: connect | mexico | learn ; q:[en,de,es] ; a: answer for learn squares
+const SQ=[
+ {id:"c1",k:"connect",q:["Do you speak 3+ languages fluently? Which one sounds most beautiful?", "Sprichst du 3+ Sprachen fließend? Welche klingt am schönsten?", "¿Hablas 3+ idiomas con fluidez? ¿Cuál suena más bonito?"]},
+ {id:"c2",k:"connect",q:["Is this your first language exchange? What brought you here?", "Bist du zum ersten Mal bei einem Sprachaustausch? Was hat dich hergebracht?", "¿Es tu primer intercambio de idiomas? ¿Qué te trajo aquí?"]},
+ {id:"c4",k:"connect",q:["Are you learning Spanish? What got you started?", "Lernst du Spanisch? Wie kam es dazu?", "¿Estás aprendiendo español? ¿Por qué empezaste?"]},
+ {id:"c5",k:"connect",q:["Do you know a word that can't be translated? Can you teach me?", "Kennst du ein Wort, das man nicht übersetzen kann? Bringst du es mir bei?", "¿Conoces una palabra que no se puede traducir? ¿Me la enseñas?"]},
+ {id:"c6",k:"connect",q:["Have you ever made a funny mistake in another language? What happened?", "Ist dir schon mal ein lustiger Fehler in einer Fremdsprache passiert? Was war los?", "¿Alguna vez cometiste un error gracioso en otro idioma? ¿Qué pasó?"]},
+ {id:"c7",k:"connect",q:["Can you teach me a word in Swabian or another dialect?", "Kannst du mir ein Wort auf Schwäbisch oder in einem anderen Dialekt beibringen?", "¿Me enseñas una palabra en suabo o en otro dialecto?"]},
+ {id:"c8",k:"connect",q:["Do you know a tongue twister from your country? Can you say it?", "Kennst du einen Zungenbrecher aus deinem Land? Sagst du ihn mal?", "¿Sabes un trabalenguas de tu país? ¿Me lo dices?"]},
+ {id:"c9",k:"connect",q:["Have you lived in 3 or more countries? Which one felt most like home?", "Hast du schon in 3 oder mehr Ländern gelebt? Wo hast du dich am meisten zu Hause gefühlt?", "¿Has vivido en 3 países o más? ¿En cuál te sentiste más en casa?"]},
+ {id:"c10",k:"connect",q:["Do you have a favourite place in Stuttgart to meet friends?", "Hast du einen Lieblingsort in Stuttgart, um Freunde zu treffen?", "¿Tienes un lugar favorito en Stuttgart para quedar con amigos?"]},
+ {id:"c11",k:"connect",q:["Is there a snack from home that you miss here? Which one?", "Gibt es einen Snack von zu Hause, den du hier vermisst? Welchen?", "¿Hay algún snack de tu país que extrañes aquí? ¿Cuál?"]},
+ {id:"c12",k:"connect",q:["What's your favourite German word?", "Was ist dein deutsches Lieblingswort?", "¿Cuál es tu palabra favorita en alemán?"]},
+ {id:"c13",k:"connect",q:["Do you have a pet? What's its name?", "Hast du ein Haustier? Wie heißt es?", "¿Tienes mascota? ¿Cómo se llama?"]},
+ {id:"c14",k:"connect",q:["Have you ever travelled alone? What's your best tip?", "Bist du schon mal allein gereist? Was ist dein bester Tipp?", "¿Has viajado solo/a alguna vez? ¿Cuál es tu mejor consejo?"]},
+ {id:"c15",k:"connect",q:["Do you know a short joke in another language? Tell me!", "Kennst du einen kurzen Witz in einer anderen Sprache? Erzähl mal!", "¿Sabes un chiste corto en otro idioma? ¡Cuéntamelo!"]},
+ {id:"m9",k:"mexico",q:["Who is your favourite Latin American singer or artist?", "Wer ist dein Lieblingsmusiker oder deine Lieblingskünstlerin aus Lateinamerika?", "¿Quién es tu cantante o artista latinoamericano favorito?"]},
+ {id:"m1",k:"mexico",q:["Have you been to Mexico? What was your favourite place?", "Warst du schon mal in Mexiko? Was war dein Lieblingsort?", "¿Has estado en México? ¿Cuál fue tu lugar favorito?"]},
+ {id:"m2",k:"mexico",q:["Have you ever celebrated Día de Muertos? Where?", "Hast du schon mal Día de Muertos gefeiert? Wo?", "¿Alguna vez celebraste el Día de Muertos? ¿Dónde?"]},
+ {id:"m3",k:"mexico",q:["What's your favourite Mexican dish?", "Was ist dein mexikanisches Lieblingsgericht?", "¿Cuál es tu platillo mexicano favorito?"]},
+ {id:"m4",k:"mexico",q:["Have you seen “Coco”? Did you cry?", "Hast du „Coco“ gesehen? Hast du geweint?", "¿Viste “Coco”? ¿Lloraste?"]},
+ {id:"m5",k:"connect",q:["Do you like spicy food? What's the spiciest thing you've ever eaten?", "Isst du gern scharf? Was war das Schärfste, das du je gegessen hast?", "¿Te gusta el picante? ¿Qué es lo más picante que has comido?"]},
+ {id:"m6",k:"mexico",q:["Have you tried a Mexican drink (horchata, jamaica, mezcal…)? Did you like it?", "Hast du schon ein mexikanisches Getränk probiert (Horchata, Jamaica, Mezcal …)? Wie war's?", "¿Has probado una bebida mexicana (horchata, jamaica, mezcal…)? ¿Te gustó?"]},
+ {id:"m8",k:"mexico",q:["Is there a tradition in your country to remember loved ones who have passed away?", "Gibt es in deinem Land eine Tradition, um an Verstorbene zu erinnern?", "¿Hay alguna tradición en tu país para recordar a los seres queridos que ya no están?"]},
+ {id:"l2",k:"learn",q:["Guess: why is there water on the ofrenda?","Rate mal: Warum steht Wasser auf der Ofrenda?","Adivina: ¿por qué hay agua en la ofrenda?"],
+   a:["So the souls can quench their thirst after the long journey back. Water also stands for life.","Damit die Seelen nach der langen Reise ihren Durst stillen. Wasser steht auch für das Leben.","Para que las almas calmen su sed tras el largo viaje. El agua también simboliza la vida."]},
+ {id:"l6",k:"learn",q:["Guess: which Mexican artist is famous for self-portraits?","Rate mal: Wer aus Mexiko ist für Selbstporträts berühmt?","Adivina: ¿qué artista mexicano/a es famoso/a por sus autorretratos?"],
+   a:["Frida Kahlo. About a third of her paintings are self-portraits.","Frida Kahlo. Etwa ein Drittel ihrer Gemälde sind Selbstporträts.","Frida Kahlo. Cerca de un tercio de sus cuadros son autorretratos."]},
+];
+// short labels shown on the grid; the full question appears when tapped
+const G={
+ c1:["Speaks 3+ languages","Spricht 3+ Sprachen","Habla 3+ idiomas"],
+ c2:["First time here","Zum ersten Mal hier","Primera vez aquí"],
+ c4:["Learning Spanish","Lernt Spanisch","Aprende español"],
+ c5:["Untranslatable word","Unübersetzbares Wort","Palabra intraducible"],
+ c6:["Funny language mistake","Lustige Sprachpanne","Error gracioso de idioma"],
+ c7:["Swabian or dialect word","Wort auf Schwäbisch oder Dialekt","Palabra en suabo o dialecto"],
+ c8:["Tongue twister","Zungenbrecher","Trabalenguas"],
+ c9:["Lived in 3+ countries","In 3+ Ländern gelebt","Vivió en 3+ países"],
+ c10:["Place to meet friends","Ort zum Freunde treffen","Lugar para quedar"],
+ c11:["Snack you miss from home","Snack, den du vermisst","Snack que extraña de su país"],
+ c12:["Favourite German word","Deutsches Lieblingswort","Palabra favorita en alemán"],
+ c13:["Has a pet","Hat ein Haustier","Tiene mascota"],
+ c14:["Solo travel tip","Tipp für Alleinreisende","Consejo para viajar solo"],
+ c15:["Joke in a foreign language","Witz in einer Fremdsprache","Chiste en otro idioma"],
+ m9:["Latin American singer or artist","Musik oder Kunst aus Lateinamerika","Artista latinoamericano"],
+ m1:["Been to Mexico","War in Mexiko","Estuvo en México"],
+ m2:["Celebrated Día de Muertos","Día de Muertos gefeiert","Celebró Día de Muertos"],
+ m3:["Favourite Mexican dish","Liebstes Essen aus Mexiko","Platillo mexicano favorito"],
+ m4:["Has seen “Coco”","Hat „Coco“ gesehen","Vio “Coco”"],
+ m5:["Loves spicy food","Isst gern scharf","Le encanta el picante"],
+ m6:["Tried a Mexican drink","Mexikanisches Getränk probiert","Probó una bebida mexicana"],
+ m8:["Tradition to remember loved ones","Tradition zum Gedenken","Tradición para recordar"],
+ l2:["Guess: water on the ofrenda?","Rate mal: Wasser auf der Ofrenda?","Adivina: ¿agua en la ofrenda?"],
+ l6:["Guess: famous self-portraits?","Rate mal: berühmte Selbstporträts?","Adivina: ¿autorretratos famosos?"],
+};
+const LI={en:0,de:1,es:2};
+const KEY="dlm-bingo-v4";
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function shuffled(){const a=SQ.map(s=>s.id);for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function guessLang(){const n=(navigator.language||"en").slice(0,2);return LI[n]!==undefined?n:"en"}
+let st=load()||{lang:guessLang(),order:shuffled(),names:{},won:false};
+let cur=null;
+const $=id=>document.getElementById(id);
+const byId=Object.fromEntries(SQ.map(s=>[s.id,s]));
+function t(k){return UI[st.lang][k]}
+function render(){
+  document.documentElement.lang=st.lang;
+  $("t-eyebrow").textContent=t("eyebrow");$("t-title").textContent=t("title");$("t-sub").textContent=t("sub");
+  $("t-rules").innerHTML=t("rules");$("resetBtn").textContent=t("reset");
+  document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l===st.lang));
+  const L=LI[st.lang],g=$("grid");g.innerHTML="";
+  const cells=st.order.slice(0,12).concat(["FREE"],st.order.slice(12));
+  cells.forEach(id=>{
+    const b=document.createElement("button");b.type="button";b.className="sq";
+    if(id==="FREE"){b.classList.add("free");b.innerHTML=t("free");b.disabled=true;g.appendChild(b);return}
+    const s=byId[id],n=st.names[id];
+    b.classList.add("k-"+s.k);if(n)b.classList.add("done");
+    b.innerHTML='<span class="tag"></span><span></span>'+(n?'<span class="who"></span>':'');
+    b.children[1].textContent=(G[id]||s.q)[L];if(n)b.children[2].textContent="✓ "+n;
+    b.setAttribute("aria-label",s.q[L]+(n?" – "+n:""));
+    b.onclick=()=>openSq(id);g.appendChild(b);
+  });
+  const done=Object.keys(st.names).length;
+  $("count").textContent=done+"/24";$("bar").style.width=(done/24*100)+"%";
+  const lg=t("legend");$("legend").innerHTML=
+    `<span><i style="background:var(--teal)"></i>${lg[0]}</span><span><i style="background:var(--pink)"></i>${lg[1]}</span><span><i style="background:var(--yel)"></i>${lg[2]}</span>`;
+}
+function openSq(id){
+  cur=id;const s=byId[id],L=LI[st.lang];
+  $("dq").textContent=s.q[L];$("t-who").textContent=t("who");
+  $("nameInput").value=st.names[id]||"";$("saveBtn").textContent=t("save");$("clearBtn").textContent=t("clear");
+  $("dwarn").hidden=true;
+  if(s.a){$("dans").textContent=s.a[L];$("dans").hidden=!st.names[id];$("reveal").hidden=!!st.names[id];$("reveal").textContent=t("reveal")}
+  else{$("dans").hidden=true;$("reveal").hidden=true}
+  $("dlg").hidden=false;setTimeout(()=>$("nameInput").focus(),50);
+}
+$("reveal").onclick=()=>{$("dans").hidden=false;$("reveal").hidden=true};
+$("form").addEventListener("submit",e=>{
+  e.preventDefault();const v=$("nameInput").value.trim();
+  if(!v){$("dlg").hidden=true;return}
+  const same=Object.entries(st.names).filter(([k,n])=>k!==cur&&n.toLowerCase()===v.toLowerCase()).length;
+  if(same>=2){$("dwarn").textContent=t("warn");$("dwarn").hidden=false;return}
+  st.names[cur]=v;save();$("dlg").hidden=true;render();
+  if(Object.keys(st.names).length===24&&!st.won){st.won=true;save();$("t-win").textContent=t("win");$("closeWin").textContent=t("close");$("winDlg").hidden=false}
+});
+$("clearBtn").onclick=()=>{delete st.names[cur];st.won=false;save();$("dlg").hidden=true;render()};
+$("dlg").addEventListener("click",e=>{if(e.target.id==="dlg")$("dlg").hidden=true});
+$("closeWin").onclick=()=>{$("winDlg").hidden=true};
+document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{st.lang=b.dataset.l;save();render()});
+$("resetBtn").onclick=()=>{$("t-confirm").textContent=t("confirm");$("yesReset").textContent=t("yes");$("noReset").textContent=t("no");$("confirm").hidden=false};
+$("noReset").onclick=()=>{$("confirm").hidden=true};
+$("yesReset").onclick=()=>{st={lang:st.lang,order:shuffled(),names:{},won:false};save();$("confirm").hidden=true;render()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){["dlg","confirm","winDlg"].forEach(i=>$(i).hidden=true)}});
+render();
+</script>
+</body>
+</html>
